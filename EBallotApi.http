@@ -1,0 +1,6 @@
+@EBallotApi_HostAddress = http://localhost:5197
+
+GET {{EBallotApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
