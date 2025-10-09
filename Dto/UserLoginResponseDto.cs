@@ -1,11 +1,10 @@
 ﻿namespace EBallotApi.Dto
 {
-    public class VoterLoginResponseDto
+    public class UserLoginResponseDto
     {
-        public int VoterId { get; set; }
+        public int UserId { get; set; }
         public string Name { get; set; }
-        public string Aadhaar { get; set; }
+        public string Role { get; set; }
         public string Token { get; set; }
-
     }
 }

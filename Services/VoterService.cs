@@ -10,13 +10,16 @@ namespace EBallotApi.Services
     public class VoterService : IVoterService
     {
         private readonly IDbConnection _connection;
+        private readonly JwtTokenService _jwtTokenService;
+        
 
         private static readonly Dictionary<string, (string Aadhaar, string Otp, DateTime Expiry)> _store = new();
 
 
-        public VoterService(IDbConnection connection)
+        public VoterService(IDbConnection connection, JwtTokenService jwtTokenService)
         {
             _connection = connection;
+            _jwtTokenService = jwtTokenService;
         }
 
 
@@ -143,12 +146,16 @@ namespace EBallotApi.Services
             if (!isPasswordValid)
                 throw new ArgumentException("Invalid password.");
 
+            string token = _jwtTokenService.GenerateToken(voter.VoterId, null, "Voter");
+
 
             return new VoterLoginResponseDto
             {
                 VoterId = voter.VoterId,
                 Name = voter.Name,
+                Token = token,
                 Aadhaar = null
+                
             };
         }
 

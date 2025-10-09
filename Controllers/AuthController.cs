@@ -1,7 +1,9 @@
 ﻿using EBallotApi.Dto;
 using EBallotApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EBallotApi.Controllers
 {
@@ -10,13 +12,15 @@ namespace EBallotApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IVoterService _voterService;
+        private readonly IUserService _userService;
 
-        public AuthController(IVoterService voterService)
+        public AuthController(IVoterService voterService, IUserService userService)
         {
             _voterService = voterService;
+            _userService = userService;
         }
 
-
+        //Register voter
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] VoterRegisterDto dto)
         {
@@ -37,8 +41,37 @@ namespace EBallotApi.Controllers
                 return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
             }
 
+        }
+
+        //Register Officer By Admin
+        [HttpPost("register-officer")]
+        [Authorize(Roles = "Admin")]
+
+        public async Task<IActionResult> RegisterElectionOfficer([FromBody] RegisterOfficerDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new { Message = "Invalid input data." });
+            }
+
+
+            var createdByAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+          
+
+            var success = await _userService.RegisterElectionOfficerAsync(dto, createdByAdminId);
+            if (success)
+            {
+                return Ok(new { Message = "Election officer registered successfully." });
+            }
+            else
+            {
+                return StatusCode(500, new { Message = "Failed to register election officer." });
+            }
 
         }
+
+
+
 
 
         [HttpPost("send-otp")]
@@ -95,7 +128,7 @@ namespace EBallotApi.Controllers
         }
 
 
-
+        //Login Voter
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] VoterLoginDto dto)
         {
@@ -118,7 +151,7 @@ namespace EBallotApi.Controllers
                     {
                         voter.VoterId,
                         voter.Name,
-                        voter.Aadhaar
+                        voter.Token
                     }
                 });
             }
@@ -135,10 +168,30 @@ namespace EBallotApi.Controllers
         }
 
 
+        //login for officer and admin
+        [HttpPost("login-user")]
+        public async Task<IActionResult> LoginUser([FromBody] UserLoginDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new { Message = "Invalid login request." });
+            }
+            var result = await _userService.LoginAsync(dto);
+            return Ok(new
+            {
+                Message = "Login successful",
+                UserId = result.UserId,
+                Name = result.Name,
+                Role = result.Role,
+                Token = result.Token
+            });
+
+
+        }
+
+
+
     }
-
-
-
 
 
 }

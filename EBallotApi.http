@@ -1,6 +1,33 @@
-@EBallotApi_HostAddress = http://localhost:5197
+@EBallotApi_HostAddress = https://localhost:7119
 
 GET {{EBallotApi_HostAddress}}/weatherforecast/
 Accept: application/json
+
+###
+
+POST {{EBallotApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  //VoterLoginDto
+}
+
+###
+
+POST {{EBallotApi_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  //VoterRegisterDto
+}
+
+###
+
+POST {{EBallotApi_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  //VoterRegisterDto
+}
 
 ###
