@@ -144,6 +144,33 @@ namespace EBallotApi.Services
             return rows > 0;
         }
 
+        //Get all ElectionOfficers
+        public async Task<IEnumerable<ElectionOfficerResponseDto>> GetAllOfficersAsync()
+        {
+            var officers = await _connection.QueryAsync<ElectionOfficerResponseDto>(
+                "sp_GetAllElectionOfficers",
+                commandType: CommandType.StoredProcedure
+            );
+            return officers;
+        }
+
+        //Get ElectionOfficer By Id
+        public async Task<ElectionOfficerResponseDto?> GetOfficerByIdAsync(int officerId)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@OfficerId", officerId, DbType.Int32);
+
+            var officer = await _connection.QueryFirstOrDefaultAsync<ElectionOfficerResponseDto>(
+                "sp_GetElectionOfficerById",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            return officer;
+        }
+
+
+
         //Update ElectionOfficer Details by Admin
 
         public async Task<bool> UpdateElectionOfficerAsync(UpdateElectionOfficerDto dto, int updatedByAdminId)
@@ -169,7 +196,7 @@ namespace EBallotApi.Services
             parameters.Add("@UpdatedByAdminId", updatedByAdminId, DbType.Int32);
 
             var rowsAffected = await _connection.ExecuteAsync(
-                "sp_UpdateElectionOfficerWithEmail",
+                "sp_UpdateElectionOfficer",
                 parameters,
                 commandType: CommandType.StoredProcedure
             );

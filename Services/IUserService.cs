@@ -1,4 +1,5 @@
 ﻿using EBallotApi.Dto;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EBallotApi.Services
 {
@@ -8,6 +9,11 @@ namespace EBallotApi.Services
         Task<UserLoginResponseDto> LoginAsync(UserLoginDto dto);
 
         Task<bool> RegisterUserAsync(RegisterUserDto dto);
+
+        Task<IEnumerable<ElectionOfficerResponseDto>> GetAllOfficersAsync();
+        Task<ElectionOfficerResponseDto?> GetOfficerByIdAsync(int officerId);
+
+
         Task<bool> UpdateElectionOfficerAsync(UpdateElectionOfficerDto dto, int updatedByAdminId);
 
     }
