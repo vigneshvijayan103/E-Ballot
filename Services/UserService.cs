@@ -1,6 +1,8 @@
-﻿using Dapper;
+﻿using Azure.Core;
+using Dapper;
 using EBallotApi.Dto;
 using EBallotApi.Helper;
+using EBallotApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -114,9 +116,73 @@ namespace EBallotApi.Services
             };
         }
 
+        //admin register
+        public async Task<bool> RegisterUserAsync(RegisterUserDto dto)
+        {
+            // Check if user already exists
+            var existingUser = await _connection.QueryFirstOrDefaultAsync<User>(
+                "SELECT * FROM Users WHERE Email = @Email", new { dto.Email });
+
+            if (existingUser != null)
+                throw new Exception("Email already registered.");
+
+            // Hash the password
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+            // Insert new user
+            string sql = @"INSERT INTO Users (Name, Email, PasswordHash, Role, CreatedAt)
+                       VALUES (@Name, @Email, @PasswordHash, @Role, GETDATE())";
+
+            int rows = await _connection.ExecuteAsync(sql, new
+            {
+                dto.Name,
+                dto.Email,
+                PasswordHash = hashedPassword,
+                dto.Role
+            });
+
+            return rows > 0;
+        }
+
+        //Update ElectionOfficer Details by Admin
+
+        public async Task<bool> UpdateElectionOfficerAsync(UpdateElectionOfficerDto dto, int updatedByAdminId)
+        {
+
+
+            var existingOfficer = await _connection.QueryFirstOrDefaultAsync<dynamic>(
+                "SELECT u.UserId FROM Users u INNER JOIN ElectionOfficerDetails eod ON u.UserId = eod.OfficerId WHERE u.UserId = @OfficerId",
+                new { dto.OfficerId }
+            );
+            if (existingOfficer == null)
+                throw new ApplicationException("Election officer not found.");
+
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@OfficerId", dto.OfficerId, DbType.Int32);
+            parameters.Add("@PhoneNumber", dto.PhoneNumber, DbType.String);
+            parameters.Add("@Address", dto.Address, DbType.String);
+            parameters.Add("@Gender", dto.Gender, DbType.String);
+            parameters.Add("@EmployeeId", dto.EmployeeId, DbType.String);
+            parameters.Add("@IsActive", dto.IsActive, DbType.Boolean);
+            parameters.Add("@Email", dto.Email, DbType.String);
+            parameters.Add("@UpdatedByAdminId", updatedByAdminId, DbType.Int32);
+
+            var rowsAffected = await _connection.ExecuteAsync(
+                "sp_UpdateElectionOfficerWithEmail",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            return rowsAffected > 0;
+        }
 
 
     }
 
+
 }
+
+
+
 

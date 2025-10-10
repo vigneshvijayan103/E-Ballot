@@ -186,7 +186,27 @@ namespace EBallotApi.Controllers
                 Token = result.Token
             });
 
+        }
 
+        //admin register
+
+        [HttpPost("register-admin")]
+        public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
+        {
+            try
+            {
+                bool result = await _userService.RegisterUserAsync(dto);
+
+                if (result)
+                    return Ok(new { message = "User registered successfully." });
+                else
+                    return BadRequest(new { message = "User registration failed." });
+            }
+            catch (Exception ex)
+            {
+                //_logger.LogError(ex, "Error while registering user");
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
 
