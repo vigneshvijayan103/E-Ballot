@@ -205,6 +205,23 @@ namespace EBallotApi.Services
         }
 
 
+        //assign constituency to office By admin
+        public async Task<bool> AssignConstituencyAsync(AssignConstituencyDto dto, int adminId)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@OfficerId", dto.OfficerId, DbType.Int32);
+            parameters.Add("@ConstituencyId", dto.ConstituencyId, DbType.Int32);
+            parameters.Add("@AssignedByAdminId", adminId, DbType.Int32);
+
+            var rowsAffected = await _connection.ExecuteAsync(
+                "sp_AssignConstituencyToOfficer",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            return true;
+        }
+
     }
 
 

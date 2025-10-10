@@ -59,6 +59,7 @@ builder.Services.AddTransient<IDbConnection>(sp =>
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<IVoterService, VoterService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IConstituencyService,ConstituencyService>();
 
 
 builder.Services.AddControllers();

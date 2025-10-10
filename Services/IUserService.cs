@@ -16,5 +16,8 @@ namespace EBallotApi.Services
 
         Task<bool> UpdateElectionOfficerAsync(UpdateElectionOfficerDto dto, int updatedByAdminId);
 
+
+        Task<bool> AssignConstituencyAsync(AssignConstituencyDto dto, int adminId);
+
     }
 }

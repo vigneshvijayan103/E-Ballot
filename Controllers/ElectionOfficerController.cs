@@ -3,6 +3,7 @@ using EBallotApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EBallotApi.Controllers
 {
@@ -69,7 +70,23 @@ namespace EBallotApi.Controllers
           }
 
 
-     
+        //assign constituency to office By admin
+        [HttpPost("assign-constituency")]
+      
+        public async Task<IActionResult> AssignConstituency([FromBody] AssignConstituencyDto dto)
+        {
+            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var result = await _userService.AssignConstituencyAsync(dto, adminId);
+
+            if (!result)
+                return BadRequest(new { Message = "Assignment failed" });
+
+            return Ok(new { Message = "Constituency assigned successfully" });
+        }
+
+
+
+
 
     }
 }
