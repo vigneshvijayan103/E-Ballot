@@ -39,29 +39,68 @@ namespace EBallotApi.Services
 
         }
         //Get all Constituency
-        public async Task<IEnumerable<Constituency>> GetAllConstituenciesAsync()
+        public async Task<IEnumerable<ConstituencyResponseDto>> GetAllConstituenciesAsync()
         {
             var constituencies = await _connection.QueryAsync<Constituency>(
                 "sp_GetConstituencies",
                 commandType: CommandType.StoredProcedure
             );
-            return constituencies;
+
+            var result = new List<ConstituencyResponseDto>();
+
+            foreach (var c in constituencies)
+            {
+               
+                var registeredVoters = await _connection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM Voters WHERE ConstituencyId = @Id",
+                    new { Id = c.ConstituencyId }
+                );
+
+                var assignedOfficers = await _connection.ExecuteScalarAsync<int>(
+                    "SELECT COUNT(*) FROM ElectionOfficerDetails  WHERE ConstituencyId = @Id AND IsActive = 1",
+                    new { Id = c.ConstituencyId }
+                );
+
+                result.Add(new ConstituencyResponseDto
+                {
+                    ConstituencyId = c.ConstituencyId,
+                    Name = c.Name,
+                    District = c.District,
+                    State = c.State,
+                    RegisteredVoters = registeredVoters,
+                    AssignedOfficers = assignedOfficers,
+                    Officers = new List<OfficerDto>() 
+                });
+            }
+
+            return result;
         }
 
+
         //Get constituency ById
-        public async Task<Constituency> GetConstituencyByIdAsync(int id)
+        public async Task<ConstituencyResponseDto?> GetConstituencyByIdAsync(int id)
         {
             var parameters = new DynamicParameters();
             parameters.Add("@ConstituencyId", id, DbType.Int32);
 
-            var constituency = await _connection.QueryFirstOrDefaultAsync<Constituency>(
+            using (var multi = await _connection.QueryMultipleAsync(
                 "sp_GetConstituencyById",
                 parameters,
-                commandType: CommandType.StoredProcedure
-            );
+                commandType: CommandType.StoredProcedure))
+            {
+                //  Constituency details
+                var constituency = await multi.ReadFirstOrDefaultAsync<ConstituencyResponseDto>();
+                if (constituency == null)
+                    return null;
 
-            return constituency;
+                //  Officers list
+                var officers = (await multi.ReadAsync<OfficerDto>()).ToList();
+                constituency.Officers = officers;
+
+                return constituency;
+            }
         }
+
 
         //update constituency
         public async Task<bool> UpdateConstituencyAsync(UpdateConstituencyDto dto, int updatedByAdminId)

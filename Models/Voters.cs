@@ -18,7 +18,10 @@
         // Password security
         public string PasswordHash { get; set; }     
 
-      
+        public int ConstituencyId { get; set; }
+
+
+
         public bool IsVerified { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }

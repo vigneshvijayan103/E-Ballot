@@ -64,21 +64,23 @@ namespace EBallotApi.Services
 
 
             var voterId = await _connection.ExecuteScalarAsync<int>(
-                "sp_InsertVoter",
-                new
-                {
-                    dto.Name,
-                    DateOfBirth = parsedDob.ToString("yyyy-MM-dd"),
-                    dto.Gender,
-                    dto.PhoneNumber,
-                    AadhaarHash = aadhaarHash,
-                    AadhaarSalt = aadhaarSalt,
-                    AadhaarQuickHash = aadhaarQuickHash,
-                    PasswordHash = hashedPassword,
-                    IsVerified = 0
-                },
-                commandType: CommandType.StoredProcedure
-            );
+                          "sp_InsertVoter",
+                          new
+                          {
+                              dto.Name,
+                              DateOfBirth = parsedDob.ToString("yyyy-MM-dd"),
+                              dto.Gender,
+                              dto.PhoneNumber,
+                              AadhaarHash = aadhaarHash,
+                              AadhaarSalt = aadhaarSalt,
+                              AadhaarQuickHash = aadhaarQuickHash,
+                              PasswordHash = hashedPassword,
+                              ConstituencyId = dto.ConstituencyId,
+                              IsVerified = 0
+                          },
+                          commandType: CommandType.StoredProcedure
+                      );
+
 
             return voterId;
         }

@@ -6,9 +6,9 @@ namespace EBallotApi.Services
     {
         Task<int> AddConstituencyAsync(ConstituencyDto dto, int updatedByAdminId);
 
-        Task<IEnumerable<Constituency>> GetAllConstituenciesAsync();
+        Task<IEnumerable<ConstituencyResponseDto>> GetAllConstituenciesAsync();
 
-        Task<Constituency> GetConstituencyByIdAsync(int id);
+        Task<ConstituencyResponseDto?> GetConstituencyByIdAsync(int id);
 
          Task<bool> UpdateConstituencyAsync(UpdateConstituencyDto dto, int updatedByAdminId);
 

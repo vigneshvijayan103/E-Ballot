@@ -25,9 +25,6 @@ builder.Services.AddCors(options =>
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]);
 
-Console.WriteLine($"Secret Key: {jwtSettings["SecretKey"]}");
-Console.WriteLine($"Issuer: {jwtSettings["Issuer"]}");
-Console.WriteLine($"Audience: {jwtSettings["Audience"]}");
 
 
 
@@ -60,6 +57,7 @@ builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<IVoterService, VoterService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IConstituencyService,ConstituencyService>();
+builder.Services.AddScoped<IAdminDashboardService,AdminDashboardService>();
 
 
 builder.Services.AddControllers();

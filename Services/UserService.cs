@@ -27,7 +27,17 @@ namespace EBallotApi.Services
             string PasswordHash = PasswordHelper.HashPassword(dto.PasswordHash);
 
 
-                    var query = @"
+            //Validate and convert gender
+
+            if (string.IsNullOrWhiteSpace(dto.Gender) || dto.Gender.Length != 1)
+                throw new ArgumentException("Gender must be 'M' or 'F'");
+
+            char genderChar = char.ToUpper(dto.Gender[0]);
+
+
+
+
+            var query = @"
                                     SELECT COUNT(1)
                                     FROM Users u
                                     INNER JOIN ElectionOfficerDetails eod ON u.UserId = eod.OfficerId
@@ -38,7 +48,6 @@ namespace EBallotApi.Services
                         query,
                         new { dto.Email, dto.PhoneNumber }
                     );
-
                     if (existing > 0)
                     {
                         throw new ApplicationException("An officer with this email or phone number already exists.");
@@ -56,8 +65,9 @@ namespace EBallotApi.Services
                             dto.Email,
                             PasswordHash = PasswordHash,
                             dto.PhoneNumber,
+                            Gender=genderChar,
+                            //dto.Gender,
                             dto.Address,
-                            dto.Gender,
                             dto.EmployeeId,
                             CreatedByAdminId = createdByAdminId
                         },
@@ -193,7 +203,9 @@ namespace EBallotApi.Services
             parameters.Add("@EmployeeId", dto.EmployeeId, DbType.String);
             parameters.Add("@IsActive", dto.IsActive, DbType.Boolean);
             parameters.Add("@Email", dto.Email, DbType.String);
+            parameters.Add("@Name", dto.Name, DbType.String);
             parameters.Add("@UpdatedByAdminId", updatedByAdminId, DbType.Int32);
+
 
             var rowsAffected = await _connection.ExecuteAsync(
                 "sp_UpdateElectionOfficer",

@@ -7,7 +7,7 @@
         public string PasswordHash { get; set; }
         public string PhoneNumber { get; set; }
         public string Address { get; set; }
-        public char Gender { get; set; } 
+        public string Gender { get; set; } 
         public string EmployeeId { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace EBallotApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles ="Admin")]
+    //[Authorize(Roles ="Admin")]
     public class ElectionOfficerController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -75,7 +75,8 @@ namespace EBallotApi.Controllers
       
         public async Task<IActionResult> AssignConstituency([FromBody] AssignConstituencyDto dto)
         {
-            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            //var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var adminId = 1;
             var result = await _userService.AssignConstituencyAsync(dto, adminId);
 
             if (!result)

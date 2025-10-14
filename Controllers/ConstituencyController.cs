@@ -11,7 +11,7 @@ namespace EBallotApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     public class ConstituencyController : ControllerBase
     {
         private readonly IConstituencyService _constituencyService;

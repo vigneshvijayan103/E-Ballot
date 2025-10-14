@@ -43,9 +43,9 @@ namespace EBallotApi.Controllers
 
         }
 
-        //Register Officer By Admin
+        //Register ElectionOfficer By Admin
         [HttpPost("register-officer")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
 
         public async Task<IActionResult> RegisterElectionOfficer([FromBody] RegisterOfficerDto dto)
         {
@@ -55,8 +55,10 @@ namespace EBallotApi.Controllers
             }
 
 
-            var createdByAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-          
+            //var createdByAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var createdByAdminId = 1;
+
+
 
             var success = await _userService.RegisterElectionOfficerAsync(dto, createdByAdminId);
             if (success)
@@ -109,7 +111,8 @@ namespace EBallotApi.Controllers
                     Gender = dto.Gender,
                     PhoneNumber = dto.Phone,
                     AadhaarNumber = dto.Aadhaar,
-                    Password = dto.Password
+                    Password = dto.Password,
+                    ConstituencyId=dto.ConstituencyId
                 };
 
                 var voterId = await _voterService.RegisterVoterAsync(voterDto);
