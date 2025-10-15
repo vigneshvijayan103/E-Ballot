@@ -1,13 +1,16 @@
-﻿using EBallotApi.Middleware;
+﻿using DotNetEnv;
+using EBallotApi.Middleware;
 using EBallotApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Data;
 using System.Text;
+using System.Threading.RateLimiting;
 using static Dapper.SqlMapper;
-using DotNetEnv;
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,37 +27,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// --- JWT Authentication ---
-//var jwtSettings = builder.Configuration.GetSection("JWT_SECRET");
-//var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]);
-
-
-
-
-
-
-
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-//})
-//.AddJwtBearer(options =>
-//{
-//    options.SaveToken = true;
-//    options.RequireHttpsMetadata = false;
-//    options.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateIssuer = true,
-//        ValidateAudience = true,
-//        ValidateIssuerSigningKey = true,
-//        ValidateLifetime = true,
-//        ValidIssuer = jwtSettings["Issuer"],
-//        ValidAudience = jwtSettings["Audience"],
-//        IssuerSigningKey = new SymmetricSecurityKey(key),
-//        ClockSkew = TimeSpan.Zero
-//    };
-//});
 
 
 
@@ -89,6 +61,42 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
+//Global Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        // Use IP address as key for simplicity
+        var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,                   // allow 100 requests
+            Window = TimeSpan.FromMinutes(1),    // per 1 minute
+            QueueLimit = 0,                       
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+        });
+    });
+
+    options.AddFixedWindowLimiter("LoginPolicy", opt =>
+    {
+        opt.PermitLimit = 3;                 // 3 login attempts
+        opt.Window = TimeSpan.FromMinutes(5);
+        opt.QueueLimit = 0;
+    });
+
+    
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Try again later.");
+    };
+
+});
+
+
+
 
 
 
@@ -151,7 +159,7 @@ app.UseHttpsRedirection();
 // --- Enable JWT Authentication ---
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();

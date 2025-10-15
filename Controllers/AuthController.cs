@@ -3,10 +3,12 @@ using EBallotApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace EBallotApi.Controllers
 {
+    //[EnableRateLimiting("LoginPolicy")]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
