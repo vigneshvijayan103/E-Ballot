@@ -1,50 +1,45 @@
-﻿using EBallotApi.Models;
-using Microsoft.IdentityModel.Tokens;
-using EBallotApi.Models;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
 namespace EBallotApi.Services
 {
     public class JwtTokenService
     {
-        private readonly IConfiguration _configuration;
-
-        public JwtTokenService(IConfiguration configuration)
+        public string GenerateToken(int userId, string email, string role)
         {
-            _configuration = configuration;
-        }
+            // Load from environment variables
 
-                public string GenerateToken(int userId, string email, string role)
-                     {
-                        
-                        var claims = new[]
-                     {
-                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                        new Claim("UserId", userId.ToString()),
-                       new Claim(ClaimTypes.Email, email?.Trim() ?? string.Empty),
-                        new Claim(ClaimTypes.Role, role)
-                    };
+            var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET");
+            var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+            var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+            var expiryMinutes = Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES");
 
+            if (string.IsNullOrEmpty(secretKey))
+                throw new Exception("JWT_SECRET environment variable is not set.");
 
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim("UserId", userId.ToString()),
+                new Claim(ClaimTypes.Email, email?.Trim() ?? string.Empty),
+                new Claim(ClaimTypes.Role, role)
+            };
 
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:SecretKey"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JwtSettings:Issuer"],
-                audience: _configuration["JwtSettings:Audience"],
+                issuer: issuer,
+                audience: audience,
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["JwtSettings:ExpiryMinutes"])),
-                signingCredentials: creds);
+                expires: DateTime.Now.AddMinutes(
+                    string.IsNullOrEmpty(expiryMinutes) ? 60 : Convert.ToDouble(expiryMinutes)),
+                signingCredentials: creds
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-
     }
 }
-
-

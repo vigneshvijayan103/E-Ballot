@@ -6,6 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Data;
 using System.Text;
+using static Dapper.SqlMapper;
+using DotNetEnv;
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,12 +25,49 @@ builder.Services.AddCors(options =>
 });
 
 // --- JWT Authentication ---
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]);
+//var jwtSettings = builder.Configuration.GetSection("JWT_SECRET");
+//var key = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]);
 
 
 
 
+
+
+
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+//})
+//.AddJwtBearer(options =>
+//{
+//    options.SaveToken = true;
+//    options.RequireHttpsMetadata = false;
+//    options.TokenValidationParameters = new TokenValidationParameters
+//    {
+//        ValidateIssuer = true,
+//        ValidateAudience = true,
+//        ValidateIssuerSigningKey = true,
+//        ValidateLifetime = true,
+//        ValidIssuer = jwtSettings["Issuer"],
+//        ValidAudience = jwtSettings["Audience"],
+//        IssuerSigningKey = new SymmetricSecurityKey(key),
+//        ClockSkew = TimeSpan.Zero
+//    };
+//});
+
+
+
+/// ---JWT Settings from Environment Variables ---
+/// 
+var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
+                ?? throw new Exception("JWT_SECRET environment variable is not set.");
+var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "EBallotIssuer";
+var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "EBallotAudience";
+
+var key = Encoding.UTF8.GetBytes(secretKey);
+
+// --- JWT Authentication ---
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -36,19 +76,21 @@ builder.Services.AddAuthentication(options =>
 .AddJwtBearer(options =>
 {
     options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = false; // True for production
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
+        ValidIssuer = issuer,
+        ValidAudience = audience,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ClockSkew = TimeSpan.Zero
     };
 });
+
+
 
 builder.Services.AddTransient<IDbConnection>(sp =>
     new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
