@@ -12,6 +12,8 @@
         public string EmployeeId { get; set; }
         public bool IsActive { get; set; }
         public int? ConstituencyId { get; set; }
+
+        public string ConstituencyName { get; set; }
         public int? AssignedByAdminId { get; set; }
         public DateTime? AssignedAt { get; set; }
         public DateTime CreatedAt { get; set; }

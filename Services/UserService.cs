@@ -185,16 +185,19 @@ namespace EBallotApi.Services
 
         public async Task<bool> UpdateElectionOfficerAsync(UpdateElectionOfficerDto dto, int updatedByAdminId)
         {
-
-
+            // Check if officer exists
             var existingOfficer = await _connection.QueryFirstOrDefaultAsync<dynamic>(
-                "SELECT u.UserId FROM Users u INNER JOIN ElectionOfficerDetails eod ON u.UserId = eod.OfficerId WHERE u.UserId = @OfficerId",
+                @"SELECT u.UserId 
+          FROM Users u 
+          INNER JOIN ElectionOfficerDetails eod ON u.UserId = eod.OfficerId 
+          WHERE u.UserId = @OfficerId",
                 new { dto.OfficerId }
             );
+
             if (existingOfficer == null)
                 throw new ApplicationException("Election officer not found.");
 
-
+            // Prepare parameters
             var parameters = new DynamicParameters();
             parameters.Add("@OfficerId", dto.OfficerId, DbType.Int32);
             parameters.Add("@PhoneNumber", dto.PhoneNumber, DbType.String);
@@ -204,9 +207,13 @@ namespace EBallotApi.Services
             parameters.Add("@IsActive", dto.IsActive, DbType.Boolean);
             parameters.Add("@Email", dto.Email, DbType.String);
             parameters.Add("@Name", dto.Name, DbType.String);
+
+            // Pass null if ConstituencyId is not set (unassign)
+            parameters.Add("@ConstituencyId", dto.ConstituencyId > 0 ? dto.ConstituencyId : (int?)null, DbType.Int32);
+
             parameters.Add("@UpdatedByAdminId", updatedByAdminId, DbType.Int32);
 
-
+            // Execute stored procedure
             var rowsAffected = await _connection.ExecuteAsync(
                 "sp_UpdateElectionOfficer",
                 parameters,
@@ -217,22 +224,8 @@ namespace EBallotApi.Services
         }
 
 
-        //assign constituency to office By admin
-        public async Task<bool> AssignConstituencyAsync(AssignConstituencyDto dto, int adminId)
-        {
-            var parameters = new DynamicParameters();
-            parameters.Add("@OfficerId", dto.OfficerId, DbType.Int32);
-            parameters.Add("@ConstituencyId", dto.ConstituencyId, DbType.Int32);
-            parameters.Add("@AssignedByAdminId", adminId, DbType.Int32);
 
-            var rowsAffected = await _connection.ExecuteAsync(
-                "sp_AssignConstituencyToOfficer",
-                parameters,
-                commandType: CommandType.StoredProcedure
-            );
-
-            return true;
-        }
+    
 
     }
 

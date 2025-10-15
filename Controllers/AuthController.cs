@@ -45,7 +45,7 @@ namespace EBallotApi.Controllers
 
         //Register ElectionOfficer By Admin
         [HttpPost("register-officer")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
 
         public async Task<IActionResult> RegisterElectionOfficer([FromBody] RegisterOfficerDto dto)
         {
@@ -55,8 +55,8 @@ namespace EBallotApi.Controllers
             }
 
 
-            //var createdByAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var createdByAdminId = 1;
+            var createdByAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
 
 
 

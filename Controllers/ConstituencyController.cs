@@ -11,7 +11,7 @@ namespace EBallotApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     public class ConstituencyController : ControllerBase
     {
         private readonly IConstituencyService _constituencyService;
@@ -29,6 +29,7 @@ namespace EBallotApi.Controllers
                 return BadRequest(new { Message = "Constituency name is required." });
 
             var createdByAdminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
 
             var rowsAffected = await _constituencyService.AddConstituencyAsync(dto,createdByAdminId);
 
@@ -70,6 +71,8 @@ namespace EBallotApi.Controllers
                 return BadRequest(new { Message = "Id mismatch" });
 
             var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            //var adminId = 1;
             var result = await _constituencyService.UpdateConstituencyAsync(dto, adminId);
 
             if (!result)

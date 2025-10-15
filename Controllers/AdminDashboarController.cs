@@ -7,7 +7,7 @@ namespace EBallotApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Admin")] // Only Admins can access dashboard metrics
+    [Authorize(Roles = "Admin")] 
     public class DashboardController : ControllerBase
     {
         private readonly IAdminDashboardService _dashboardService;
