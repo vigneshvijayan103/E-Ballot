@@ -11,9 +11,13 @@ using System.Data;
 using System.Text;
 using System.Threading.RateLimiting;
 using static Dapper.SqlMapper;
-Env.Load();
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+Env.Load();
+
+
 
 // --- CORS setup ---
 builder.Services.AddCors(options =>
@@ -31,7 +35,7 @@ builder.Services.AddCors(options =>
 
 
 /// ---JWT Settings from Environment Variables ---
-/// 
+
 var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 
                 ?? throw new Exception("JWT_SECRET environment variable is not set.");
 var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "EBallotIssuer";
@@ -67,7 +71,7 @@ builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
-        // Use IP address as key for simplicity
+        // Use IP address as key 
         var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
         return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
@@ -79,10 +83,11 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
+    //Login rate limiting 3 attempts in 1 minutes
     options.AddFixedWindowLimiter("LoginPolicy", opt =>
     {
         opt.PermitLimit = 3;                 // 3 login attempts
-        opt.Window = TimeSpan.FromMinutes(5);
+        opt.Window = TimeSpan.FromMinutes(1);
         opt.QueueLimit = 0;
     });
 

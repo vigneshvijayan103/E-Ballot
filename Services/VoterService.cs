@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using EBallotApi.Dto;
 using EBallotApi.Helper;
+using Microsoft.Data.SqlClient;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
@@ -23,71 +24,100 @@ namespace EBallotApi.Services
         }
 
 
-        //registration of voter
+       
+
         public async Task<int> RegisterVoterAsync(VoterRegisterDto dto)
         {
+            if (dto == null)
+                throw new ArgumentException("Invalid request.");
 
-            var aadhaarSalt = AadhaarHelper.GenerateSalt();
-
-
-            var aadhaarHash = AadhaarHelper.ComputeHash(dto.AadhaarNumber, aadhaarSalt);
-
-
-            var aadhaarQuickHash = AadhaarHelper.ComputeQuickHash(dto.AadhaarNumber);
-
-            var existing = await _connection.ExecuteScalarAsync<int>(
-                            @"SELECT COUNT(1) FROM Voters 
-                      WHERE PhoneNumber = @PhoneNumber 
-                         OR AadhaarHash = @AadhaarHash 
-                         OR AadhaarQuickHash = @AadhaarQuickHash",
-                new { dto.PhoneNumber, AadhaarHash = aadhaarHash, AadhaarQuickHash = aadhaarQuickHash }
-            );
-
-
-
-            if (existing > 0)
-                throw new ArgumentException("Phone number or Aadhaar is already registered.");
-
-
-
+            //Validate and parse DOB =====
             if (!DateTime.TryParseExact(dto.DateOfBirthString, "yyyy-MM-dd",
                 CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDob))
             {
                 throw new ArgumentException("Invalid Date of Birth format. Expected YYYY-MM-DD.");
             }
 
+            //  Encrypt Phone Number
+            string encryptedPhone;
+            try
+            {
+                encryptedPhone = AesEncryptionHelper.Encrypt(dto.PhoneNumber);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Phone number encryption failed: " + ex.Message);
+            }
 
+            // hashing Aadhaar
+            var aadhaarSalt = AadhaarHelper.GenerateSalt();
+            var aadhaarHash = AadhaarHelper.ComputeHash(dto.AadhaarNumber, aadhaarSalt);
+            var aadhaarQuickHash = AadhaarHelper.ComputeQuickHash(dto.AadhaarNumber);
 
+           
+            var existing = await _connection.ExecuteScalarAsync<int>(
+                @"SELECT COUNT(1) FROM Voters 
+          WHERE PhoneNumber = @PhoneNumber 
+             OR AadhaarHash = @AadhaarHash 
+             OR AadhaarQuickHash = @AadhaarQuickHash",
+                new
+                {
+                    PhoneNumber = encryptedPhone,
+                    AadhaarHash = aadhaarHash,
+                    AadhaarQuickHash = aadhaarQuickHash
+                }
+            );
 
+            if (existing > 0)
+                throw new ArgumentException("Phone number or Aadhaar is already registered.");
+
+            // hashing password 
             var hashedPassword = PasswordHelper.HashPassword(dto.Password);
 
+           
+            try
+            {
+                var voterId = await _connection.ExecuteScalarAsync<int>(
+                    "sp_InsertVoter",
+                    new
+                    {
+                        dto.Name,
+                        DateOfBirth = parsedDob,
+                        dto.Gender,
+                        PhoneNumber = encryptedPhone,
+                        AadhaarHash = aadhaarHash,
+                        AadhaarSalt = aadhaarSalt,
+                        AadhaarQuickHash = aadhaarQuickHash,
+                        PasswordHash = hashedPassword,
+                        dto.ConstituencyId,
+                        IsVerified = 0
+                    },
+                    commandType: CommandType.StoredProcedure
+                );
 
-
-            var voterId = await _connection.ExecuteScalarAsync<int>(
-                          "sp_InsertVoter",
-                          new
-                          {
-                              dto.Name,
-                              DateOfBirth = parsedDob.ToString("yyyy-MM-dd"),
-                              dto.Gender,
-                              dto.PhoneNumber,
-                              AadhaarHash = aadhaarHash,
-                              AadhaarSalt = aadhaarSalt,
-                              AadhaarQuickHash = aadhaarQuickHash,
-                              PasswordHash = hashedPassword,
-                              ConstituencyId = dto.ConstituencyId,
-                              IsVerified = 0
-                          },
-                          commandType: CommandType.StoredProcedure
-                      );
-
-
-            return voterId;
+                return voterId;
+            }
+            catch (SqlException sqlEx) when (sqlEx.Number == 2627)
+            {
+                throw new ArgumentException("Phone number or Aadhaar is already registered.");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Database error: " + ex.Message);
+            }
         }
 
 
 
+
+
+
+
+
+
         //otp generation and sending
+
+
         public string SendOtp(string aadhaar, string phone)
         {
             var otp = new Random().Next(100000, 999999).ToString();

@@ -1,14 +1,16 @@
 ﻿using EBallotApi.Dto;
+using EBallotApi.Helper;
 using EBallotApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace EBallotApi.Controllers
 {
-    //[EnableRateLimiting("LoginPolicy")]
+    
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -44,6 +46,8 @@ namespace EBallotApi.Controllers
             }
 
         }
+
+        
 
         //Register ElectionOfficer By Admin
         [HttpPost("register-officer")]
@@ -93,18 +97,14 @@ namespace EBallotApi.Controllers
             try
             {
                 if (dto == null)
-                    return BadRequest(new { success = false, message = "Invalid input data" });
-
-
+                    return BadRequest(new { success = false, message = "Invalid input data." });
 
                 bool isOtpValid = _voterService.VerifyOtp(dto.Aadhaar, dto.otp, dto.sessionId);
                 if (!isOtpValid)
-                    return BadRequest(new { success = false, message = "Invalid or expired OTP" });
-
+                    return BadRequest(new { success = false, message = "Invalid or expired OTP." });
 
                 if (!DateTime.TryParseExact(dto.Dob, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out DateTime dob))
                     return BadRequest(new { success = false, message = "Invalid Date of Birth format. Use YYYY-MM-DD." });
-
 
                 var voterDto = new VoterRegisterDto
                 {
@@ -114,23 +114,28 @@ namespace EBallotApi.Controllers
                     PhoneNumber = dto.Phone,
                     AadhaarNumber = dto.Aadhaar,
                     Password = dto.Password,
-                    ConstituencyId=dto.ConstituencyId
+                    ConstituencyId = dto.ConstituencyId
                 };
 
-                var voterId = await _voterService.RegisterVoterAsync(voterDto);
+                int voterId = await _voterService.RegisterVoterAsync(voterDto);
 
-                return Ok(new { success = true, message = "Voter registered successfully", voterId });
+                return Ok(new { success = true, message = "Voter registered successfully.", voterId });
             }
             catch (ArgumentException ex)
             {
-
+             
                 return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+              
+                return StatusCode(500, new { success = false, message = "Internal server error.", error = ex.Message });
             }
         }
+
+
+
+
 
 
         //Login Voter
@@ -209,7 +214,7 @@ namespace EBallotApi.Controllers
             }
             catch (Exception ex)
             {
-                //_logger.LogError(ex, "Error while registering user");
+                
                 return StatusCode(500, new { message = ex.Message });
             }
         }

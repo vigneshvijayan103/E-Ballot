@@ -9,9 +9,11 @@ using System.Security.Claims;
 
 namespace EBallotApi.Controllers
 {
+   
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
+
     public class ConstituencyController : ControllerBase
     {
         private readonly IConstituencyService _constituencyService;
@@ -21,8 +23,8 @@ namespace EBallotApi.Controllers
         }
 
         // Add Constituency
-
         [HttpPost("add")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddConstituency([FromBody] ConstituencyDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Name))
@@ -44,14 +46,18 @@ namespace EBallotApi.Controllers
 
         //Get Constituency
         [HttpGet("all")]
+
         public async Task<IActionResult> GetAll()
         {
             var list = await _constituencyService.GetAllConstituenciesAsync();
             return Ok(list);
         }
 
+
+        
         //Get constituency ById
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetById(int id)
         {
             var constituency = await _constituencyService.GetConstituencyByIdAsync(id);
@@ -63,8 +69,10 @@ namespace EBallotApi.Controllers
         }
 
 
+
         // Update Constituency By Admin
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateConstituencyDto dto)
         {
             if (id != dto.ConstituencyId)
