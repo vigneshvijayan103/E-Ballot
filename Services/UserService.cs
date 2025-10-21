@@ -188,9 +188,9 @@ namespace EBallotApi.Services
             // Check if officer exists
             var existingOfficer = await _connection.QueryFirstOrDefaultAsync<dynamic>(
                 @"SELECT u.UserId 
-          FROM Users u 
-          INNER JOIN ElectionOfficerDetails eod ON u.UserId = eod.OfficerId 
-          WHERE u.UserId = @OfficerId",
+                  FROM Users u 
+                  INNER JOIN ElectionOfficerDetails eod ON u.UserId = eod.OfficerId 
+                  WHERE u.UserId = @OfficerId",
                 new { dto.OfficerId }
             );
 

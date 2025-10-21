@@ -113,6 +113,7 @@ builder.Services.AddScoped<IVoterService, VoterService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IConstituencyService,ConstituencyService>();
 builder.Services.AddScoped<IAdminDashboardService,AdminDashboardService>();
+builder.Services.AddScoped<IElectionService, ElectionService>();
 
 
 builder.Services.AddControllers();

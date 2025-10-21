@@ -3,7 +3,7 @@
     public class AdminDashboardDto
     {
         public int TotalOfficers { get; set; }
-        //public int TotalElections { get; set; }
+        public int ActiveElections { get; set; }
         public int TotalConstituencies { get; set; }
 
         public int TotalRegisteredVoters { get; set; }
