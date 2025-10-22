@@ -14,6 +14,7 @@ namespace EBallotApi.Helper
             string key = Environment.GetEnvironmentVariable("AES_KEY");
             string iv = Environment.GetEnvironmentVariable("AES_IV");
 
+            
 
 
             if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(iv))
@@ -27,7 +28,6 @@ namespace EBallotApi.Helper
             Key = Encoding.UTF8.GetBytes(key);
             IV = Encoding.UTF8.GetBytes(iv);
 
-            Console.WriteLine("✅ AES helper initialized successfully");
         }
 
         public static string Encrypt(string plainText)
@@ -57,7 +57,18 @@ namespace EBallotApi.Helper
             var cipherBytes = Convert.FromBase64String(cipherText);
             var plainBytes = decryptor.TransformFinalBlock(cipherBytes, 0, cipherBytes.Length);
 
+
+
             return Encoding.UTF8.GetString(plainBytes);
+        }
+
+        // Mask Aadhaar: XXXX-XXXX-1234
+        public static string MaskAadhaar(string aadhaar)
+        {
+            if (string.IsNullOrEmpty(aadhaar) || aadhaar.Length < 4)
+                return "XXXX-XXXX-XXXX";
+
+            return $"XXXX-XXXX-{aadhaar.Substring(aadhaar.Length - 4)}";
         }
     }
 }

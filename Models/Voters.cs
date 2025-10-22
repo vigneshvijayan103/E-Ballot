@@ -12,8 +12,6 @@
 
         // Aadhaar security
         public string AadhaarHash { get; set; }
-        public byte[] AadhaarSalt { get; set; }
-        public string AadhaarQuickHash { get; set; }
 
         // Password security
         public string PasswordHash { get; set; }     

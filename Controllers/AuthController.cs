@@ -173,7 +173,7 @@ namespace EBallotApi.Controllers
             catch (Exception ex)
             {
 
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message , stack = ex.StackTrace });
             }
         }
 
