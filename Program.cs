@@ -1,6 +1,9 @@
 ﻿using DotNetEnv;
 using EBallotApi.Middleware;
 using EBallotApi.Services;
+using EBallotApi.Validators;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.SqlClient;
@@ -114,10 +117,21 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IConstituencyService,ConstituencyService>();
 builder.Services.AddScoped<IAdminDashboardService,AdminDashboardService>();
 builder.Services.AddScoped<IElectionService, ElectionService>();
+builder.Services.AddScoped<ICandidateService, CandidateService>();
+builder.Services.AddScoped<IElectionOfficerService, ElectionOfficerService>();
+
 
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterCandidateValidator>();
+
+
+
+
 
 
 builder.Services.AddSwaggerGen(c =>
