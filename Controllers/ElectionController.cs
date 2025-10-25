@@ -19,7 +19,7 @@ namespace EBallotApi.Controllers
         }
 
 
-        //create election
+        //create election by Admun
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateElection([FromBody] CreateElectionDto dto, int CreatedById)
@@ -138,7 +138,7 @@ namespace EBallotApi.Controllers
 
         //get elections by constituency
         [HttpGet("ByConstituency/{constituencyId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Voter")]
         public async Task<IActionResult> GetElectionsByConstituency(int constituencyId)
         {
             if (constituencyId <= 0)
@@ -148,6 +148,7 @@ namespace EBallotApi.Controllers
 
             return Ok(new { message = "Elections fetched successfully.", data = elections });
         }
+
 
 
 

@@ -80,7 +80,7 @@ namespace EBallotApi.Controllers
 
 
 
-
+        //sending otp while  voter Registration
 
         [HttpPost("send-otp")]
         public IActionResult SendOtp([FromBody] OtpRequestDto dto)
@@ -90,6 +90,7 @@ namespace EBallotApi.Controllers
         }
 
 
+        //voter verification after otp 
 
         [HttpPost("register-verify")]
         public async Task<IActionResult> RegisterVerify([FromBody] VoterRegisterVerifyDto dto)
@@ -152,6 +153,10 @@ namespace EBallotApi.Controllers
             try
             {
                 var voter = await _voterService.LoginAsync(dto);
+
+
+                if (voter==null)
+                    return Unauthorized(new { success = false, message = "Invalid password or Adhaar" });
 
                 return Ok(new
                 {

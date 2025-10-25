@@ -12,7 +12,7 @@ namespace EBallotApi.Controllers
    
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize(Roles = "Admin")]
+
 
     public class ConstituencyController : ControllerBase
     {
@@ -80,7 +80,7 @@ namespace EBallotApi.Controllers
 
             var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            //var adminId = 1;
+            
             var result = await _constituencyService.UpdateConstituencyAsync(dto, adminId);
 
             if (!result)

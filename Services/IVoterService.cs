@@ -11,9 +11,14 @@ namespace EBallotApi.Services
 
         Task<VoterLoginResponseDto> LoginAsync(VoterLoginDto dto);
 
-        Task<IEnumerable<VoterDto>> GetAllVotersAsync(string role, int userId);
+        Task<IEnumerable<VoterResponseDto>> GetAllVotersAsync(string role, int userId);
+
+        Task<VoterResponseDto> GetVoterByIdAsync(int voterId);
+
         Task<string> ApproveVoterAsync(int voterId, int officerId);
         Task<string> RejectVoterAsync(int voterId, int officerId, string reason);
+
+        Task<bool> HasVoterVotedAsync(int voterId, int electionId, int electionConstituencyId);
 
 
     }

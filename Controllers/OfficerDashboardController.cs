@@ -18,6 +18,17 @@ namespace EBallotApi.Controllers
             _electionOfficerService = electionOfficerService;
         }
 
+        //officerDashboard metrics
+        [HttpGet("metrics")]
+        public async Task<IActionResult> GetDashboardMetrics()
+        {
+            int officerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var result = await _electionOfficerService.GetDashboardMetrics(officerId);
+            return Ok(result);
+        }
+
+        //get elections assigned to officer
         [HttpGet("Myelections")]
         public async Task<IActionResult> GetElectionsByOfficer()
         {

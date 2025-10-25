@@ -28,8 +28,9 @@ namespace EBallotApi.Controllers
 
 
         //Get all voters
-        [Authorize(Roles = "Admin,ElectionOfficer")]
+       
         [HttpGet("voters")]
+        [Authorize(Roles = "Admin,ElectionOfficer")]
         public async Task<IActionResult> GetVoters()
         {
             try
@@ -49,9 +50,29 @@ namespace EBallotApi.Controllers
             }
         }
 
+        //Get voter by id
+
+       
+        [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,ElectionOfficer")]
+        public async Task<IActionResult>GetvoterByid(int id)
+        {
+            var voter=await _voterService.GetVoterByIdAsync(id);
+            if(voter==null)
+            {
+                return NotFound(new { success = false, message = "Voter not found." });
+            }
+
+            return Ok(new { success = true, data = voter });
+
+        }
+
+
+
         //approve voter by election officer
-        [Authorize(Roles = "ElectionOfficer")]
+       
         [HttpPost("approve")]
+        [Authorize(Roles = "ElectionOfficer")]
         public async Task<IActionResult> ApproveVoter([FromBody] ApproveVoterRequest request)
         {
             if (request == null || request.VoterId <= 0)
@@ -69,8 +90,9 @@ namespace EBallotApi.Controllers
 
 
         //reject voter by election officer
-        [Authorize(Roles = "ElectionOfficer")]
+       
         [HttpPost("reject")]
+        [Authorize(Roles = "ElectionOfficer")]
         public async Task<IActionResult> RejectVoter([FromBody] RejectVoterRequest request)
         {
             if (request == null || request.VoterId <= 0)
@@ -84,6 +106,26 @@ namespace EBallotApi.Controllers
 
            
             return Ok(new { message });
+        }
+
+
+        //is voter voted
+        [HttpGet("status")]
+        public async Task<IActionResult> GetVoteStatus([FromQuery] int electionId, [FromQuery] int electionConstituencyId)
+        {
+            // Get voter ID from JWT claim
+            var voterId = int.Parse(User.FindFirst("VoterId")?.Value ?? "0");
+
+            if (voterId == 0)
+                return Unauthorized("Invalid or missing voter token");
+
+            var hasVoted = await _voterService.HasVoterVotedAsync(voterId, electionId, electionConstituencyId);
+
+            return Ok(new
+            {
+                success = true,
+                data = new { hasVoted }
+            });
         }
 
 

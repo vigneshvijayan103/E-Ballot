@@ -21,6 +21,7 @@ namespace EBallotApi.Controllers
 
         //Get all ElectionOfficers
         [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllOfficers()
         {
             var officers = await _userService.GetAllOfficersAsync();
@@ -34,6 +35,7 @@ namespace EBallotApi.Controllers
 
         //Get ElectionOfficer By Id
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetOfficerById(int id)
         {
             var officer = await _userService.GetOfficerByIdAsync(id);
@@ -49,8 +51,9 @@ namespace EBallotApi.Controllers
         // Update Officer Details By Admin
 
         [HttpPatch("update")]
+        [Authorize(Roles = "Admin")]
 
-          public async Task<IActionResult> UpdateElectionOfficer([FromBody] UpdateElectionOfficerDto dto)
+        public async Task<IActionResult> UpdateElectionOfficer([FromBody] UpdateElectionOfficerDto dto)
           {
             if (dto == null || dto.OfficerId <= 0)
                 return BadRequest(new { Message = "Invalid officer data" });
@@ -70,12 +73,6 @@ namespace EBallotApi.Controllers
                 Message = "Officer updated successfully",
             });
           }
-
-
-
-
-      
-   
 
 
     }

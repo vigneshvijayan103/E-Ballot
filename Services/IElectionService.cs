@@ -13,9 +13,10 @@ namespace EBallotApi.Services
         Task<ElectionDto> GetElectionByIdAsync(int electionId);
         Task<ElectionConstituency?> AssignConstituencyToElectionAsync(int electionId, int constituencyId, int userId);
         Task<bool> UnassignConstituencyFromElectionAsync(int electionId, int constituencyId, int userId);
-        Task<IEnumerable<ElectionDto>> GetElectionsByConstituencyAsync(int constituencyId);
+        Task<IEnumerable<ElectionWithConstituencyDto>> GetElectionsByConstituencyAsync(int constituencyId);
 
-     
+
+
 
     }
 

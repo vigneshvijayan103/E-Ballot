@@ -119,6 +119,7 @@ builder.Services.AddScoped<IAdminDashboardService,AdminDashboardService>();
 builder.Services.AddScoped<IElectionService, ElectionService>();
 builder.Services.AddScoped<ICandidateService, CandidateService>();
 builder.Services.AddScoped<IElectionOfficerService, ElectionOfficerService>();
+builder.Services.AddScoped<IVotingService, VotingService>();
 
 
 
@@ -173,6 +174,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 

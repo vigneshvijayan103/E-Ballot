@@ -1,5 +1,6 @@
 ﻿using EBallotApi.Dto;
 using EBallotApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -20,9 +21,8 @@ namespace EBallotApi.Controllers
 
         //Register Candidate by election officer
         [HttpPost("register")]
-
-
-        public async Task<IActionResult> RegisterCandidate([FromBody] RegisterCandidateDto dto)
+        [Authorize(Roles ="ElectionOfficer")]
+        public async Task<IActionResult> RegisterCandidate([FromForm] RegisterCandidateDto dto)
         {
             var CreatedByOfficerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
@@ -36,6 +36,7 @@ namespace EBallotApi.Controllers
         //get candidates created by electionOfficer
 
         [HttpGet("by-officer")]
+        [Authorize(Roles = "ElectionOfficer")]
         public async Task<IActionResult> GetCandidatesByOfficer()
         {
 
@@ -49,6 +50,29 @@ namespace EBallotApi.Controllers
             return Ok(candidates);
 
 
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCandidatesById(int id)
+        {
+
+            var candidate = await _candidateService.GetCandidateByIdAsync(id);
+
+            if (candidate == null)
+                return NotFound("no candidate found");
+
+            return Ok(candidate);
+
+
+        }
+
+        
+        [HttpGet("by-election/{electionId}")]
+        [Authorize]
+        public async Task<IActionResult> GetByElection(int electionId)
+        {
+            var candidates = await _candidateService.GetCandidatesByElectionIdAsync(electionId);
+            return Ok(new { success = true, data = candidates });
         }
     }
 }

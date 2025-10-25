@@ -13,6 +13,21 @@ namespace EBallotApi.Services
         {
             _connection = connection;
         }
+
+
+        public async Task<OfficerDashBoardDto>GetDashboardMetrics(int officerID)
+        {
+
+            var metrics = await _connection.QuerySingleAsync<OfficerDashBoardDto>(
+               "sp_GetOfficerDashboardMetrics",
+               new { OfficerId = officerID },
+               commandType: CommandType.StoredProcedure
+               );
+
+            return metrics ?? new OfficerDashBoardDto();
+
+        }
+
         public async Task<IEnumerable<MyElectionDto>> GetAssignedElectionsAsync(int officerId)
         {
 
@@ -20,7 +35,7 @@ namespace EBallotApi.Services
           "GetElectionsByOfficerId",
           new { OfficerId = officerId },
           commandType: CommandType.StoredProcedure
-      );
+                 );
 
             return result;
         }

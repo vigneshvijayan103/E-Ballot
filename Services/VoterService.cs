@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using EBallotApi.Dto;
 using EBallotApi.Helper;
+using EBallotApi.Models;
 using Microsoft.Data.SqlClient;
 using System.Collections.Concurrent;
 using System.Data;
@@ -153,7 +154,7 @@ namespace EBallotApi.Services
         public async Task<VoterLoginResponseDto> LoginAsync(VoterLoginDto dto)
         {
             if (dto == null)
-                throw new ArgumentException("Invalid login request."); // Can keep this as pre-check
+                throw new ArgumentException("Invalid login request."); 
 
             try
             {
@@ -163,8 +164,8 @@ namespace EBallotApi.Services
                 // Fetch voter using AadhaarQuickHash
                 var voter = await _connection.QuerySingleOrDefaultAsync<dynamic>(
                     @"SELECT VoterId, Name, AadhaarEnc, PasswordHash, DateOfBirth
-              FROM Voters
-              WHERE AadhaarQuickHash = @QuickHash",
+                          FROM Voters
+                          WHERE AadhaarQuickHash = @QuickHash",
                     new { QuickHash = quickHash }
                 );
 
@@ -189,7 +190,9 @@ namespace EBallotApi.Services
                     return null; // invalid login
 
                 // Generate JWT token
-                string token = _jwtTokenService.GenerateToken(voter.VoterId, null, "Voter");
+                string token = _jwtTokenService.GenerateToken(voter.VoterId,null,"Voter" );
+
+               
 
                 // Return response
                 return new VoterLoginResponseDto
@@ -202,7 +205,7 @@ namespace EBallotApi.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
+               
                 Console.WriteLine("Unexpected error during login: " + ex.Message);
                 throw; // let middleware handle 500
             }
@@ -211,43 +214,15 @@ namespace EBallotApi.Services
 
 
         //get all voters
-        public async Task<IEnumerable<VoterDto>> GetAllVotersAsync(string role, int userId)
+        public async Task<IEnumerable<VoterResponseDto>> GetAllVotersAsync(string role, int userId)
         {
-            var voters = (await _connection.QueryAsync<VoterDto>(
-                "sp_GetVoters",
-                commandType: CommandType.StoredProcedure
-            )).ToList();
+            var voters = (await _connection.QueryAsync<VoterDbDto>(
+                                "sp_GetVoters",
+                                commandType: CommandType.StoredProcedure
+                            )).ToList();
 
-
-            foreach (var voter in voters)
-            {
-                try
-                {
-                    if (!string.IsNullOrEmpty(voter.PhoneNumber))
-                        voter.PhoneNumber = AesEncryptionHelper.Decrypt(voter.PhoneNumber);
-                }
-                catch
-                {
-                    voter.PhoneNumber = "[Decryption Error]";
-                }
-
-                try
-                {
-                    if (!string.IsNullOrEmpty(voter.AadhaarEnc))
-                    {
-                        var decryptedAadhaar = AesEncryptionHelper.Decrypt(voter.AadhaarEnc);
-                        voter.Aadhaar = AesEncryptionHelper.MaskAadhaar(decryptedAadhaar);
-                    }
-                }
-                catch
-                {
-                    voter.Aadhaar = "[Decryption Error]";
-                }
-            }
-
-
-                //Role-based filtering
-                if (role == "ElectionOfficer")
+            // Role-based filtering
+            if (role == "ElectionOfficer")
             {
                 int constituencyId = await _connection.ExecuteScalarAsync<int>(
                     "SELECT ConstituencyId FROM ElectionOfficerDetails WHERE OfficerId = @UserId",
@@ -257,8 +232,63 @@ namespace EBallotApi.Services
                 voters = voters.Where(v => v.ConstituencyId == constituencyId).ToList();
             }
 
-            return voters;
+          
+
+            var responseList = voters.Select(voter => new VoterResponseDto
+            {
+                VoterId = voter.VoterId,
+                Name = voter.Name,
+                DateOfBirth = voter.DateOfBirth,
+                Gender = voter.Gender,
+                PhoneNumber = SafeDecryptHelper.SafeDecrypt(voter.PhoneNumber),
+                Aadhaar = SafeDecryptHelper.SafeDecryptAndMaskAadhaar(voter.AadhaarEnc),
+                Status = voter.Status,
+                ConstituencyName = voter.ConstituencyName,
+                ConstituencyId = voter.ConstituencyId,
+                Age = voter.Age,
+                RejectionReason=voter.rejectionReason
+            }).ToList();
+
+            return responseList;
+
+
         }
+
+        //getvoterByid
+
+        public async Task<VoterResponseDto> GetVoterByIdAsync(int voterId)
+        {
+            var voter = await _connection.QueryFirstOrDefaultAsync<VoterDbDto>(
+                "sp_GetVoterById",
+                new { VoterId = voterId },
+                commandType: CommandType.StoredProcedure
+            );
+
+            if (voter == null)
+                return null; 
+
+            var response = new VoterResponseDto
+            {
+                VoterId = voter.VoterId,
+                Name = voter.Name,
+                DateOfBirth = voter.DateOfBirth,
+                Gender = voter.Gender,
+                PhoneNumber = SafeDecryptHelper.SafeDecrypt(voter.PhoneNumber),
+                Aadhaar = SafeDecryptHelper.SafeDecryptAndMaskAadhaar(voter.AadhaarEnc),
+                Status = voter.Status,
+                ConstituencyName = voter.ConstituencyName,
+                ConstituencyId = voter.ConstituencyId,
+                Age = voter.Age,
+                RejectionReason=voter.rejectionReason
+               
+            };
+
+            return response;
+        }
+
+
+
+
 
 
         //approve voters for election officer
@@ -290,6 +320,27 @@ namespace EBallotApi.Services
             return parameters.Get<string>("@ResultMessage");
         }
 
+
+        //check whether the voter is voter for specified election
+        public async Task<bool> HasVoterVotedAsync(int voterId, int electionId, int electionConstituencyId)
+        {
+            const string sql = @"
+                SELECT COUNT(1)
+                FROM VoterParticipation vp
+                INNER JOIN ElectionConstituency ec ON vp.ElectionConstituencyId = ec.ElectionConstituencyId
+                WHERE vp.VoterId = @VoterId
+                 AND ec.ElectionId = @ElectionId
+                  AND vp.ElectionConstituencyId = @ElectionConstituencyId";
+
+            int count = await _connection.ExecuteScalarAsync<int>(sql, new
+            {
+                VoterId = voterId,
+                ElectionId = electionId,
+                ElectionConstituencyId = electionConstituencyId
+            });
+
+            return count > 0;
+        }
 
 
 

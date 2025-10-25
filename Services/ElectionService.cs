@@ -98,7 +98,7 @@ namespace EBallotApi.Services
             parameters.Add("@ConstituencyId", constituencyId, DbType.Int32);
             parameters.Add("@UserId", userId, DbType.Int32);
 
-            // This will return either the new record or the updated one
+          
             var result = await _connection.QueryFirstOrDefaultAsync<ElectionConstituency>(
                 "sp_AssignConstituencyToElection",
                 parameters,
@@ -125,12 +125,12 @@ namespace EBallotApi.Services
             return rowsAffected > 0; 
         }
 
-        public async Task<IEnumerable<ElectionDto>> GetElectionsByConstituencyAsync(int constituencyId)
+        public async Task<IEnumerable<ElectionWithConstituencyDto>> GetElectionsByConstituencyAsync(int constituencyId)
         {
             var parameters = new DynamicParameters();
             parameters.Add("@ConstituencyId", constituencyId, DbType.Int32);
 
-            var result = await _connection.QueryAsync<ElectionDto>(
+            var result = await _connection.QueryAsync<ElectionWithConstituencyDto>(
                 "sp_GetElectionsByConstituency",
                 parameters,
                 commandType: CommandType.StoredProcedure

@@ -3,27 +3,20 @@
     public class Voters
     {
 
-        public int VoterId { get; set; }         
-        public string Name { get; set; }           
-        public DateTime DateOfBirth { get; set; }  
-        public char Gender { get; set; }            
-        public string PhoneNumber { get; set; }
-
-
-        // Aadhaar security
-        public string AadhaarHash { get; set; }
-
-        // Password security
-        public string PasswordHash { get; set; }     
-
-        public int ConstituencyId { get; set; }
-
-
-
-        public bool IsVerified { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public int VoterId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public DateTime DateOfBirth { get; set; }
+        public string Gender { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty; 
+        public string AadhaarQuickHash { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
+        public int ConstituencyId { get; set; }
+        public string AadhaarEnc { get; set; } = string.Empty; 
+        public string Status { get; set; } = string.Empty;
+        public string? RejectionReason { get; set; }  
 
     }
 }
