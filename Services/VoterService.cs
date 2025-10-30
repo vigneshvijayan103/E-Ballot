@@ -6,6 +6,7 @@ using Microsoft.Data.SqlClient;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace EBallotApi.Services
@@ -322,24 +323,27 @@ namespace EBallotApi.Services
 
 
         //check whether the voter is voter for specified election
-        public async Task<bool> HasVoterVotedAsync(int voterId, int electionId, int electionConstituencyId)
+        public async Task<bool> HasVoterVotedAsync(int voterId, int electionConstituencyId)
         {
             const string sql = @"
-                SELECT COUNT(1)
-                FROM VoterParticipation vp
-                INNER JOIN ElectionConstituency ec ON vp.ElectionConstituencyId = ec.ElectionConstituencyId
-                WHERE vp.VoterId = @VoterId
-                 AND ec.ElectionId = @ElectionId
-                  AND vp.ElectionConstituencyId = @ElectionConstituencyId";
+                                    SELECT CASE 
+                                             WHEN EXISTS (
+                                                 SELECT 1 
+                                                 FROM VoterParticipation
+                                                 WHERE VoterId = @VoterId 
+                                                   AND ElectionConstituencyId = @ElectionConstituencyId
+                                             ) 
+                                             THEN 1 
+                                             ELSE 0 
+                                           END";
 
-            int count = await _connection.ExecuteScalarAsync<int>(sql, new
+            bool hasVoted = await _connection.ExecuteScalarAsync<bool>(sql, new
             {
                 VoterId = voterId,
-                ElectionId = electionId,
                 ElectionConstituencyId = electionConstituencyId
             });
 
-            return count > 0;
+            return hasVoted;
         }
 
 

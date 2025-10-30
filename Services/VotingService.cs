@@ -13,7 +13,7 @@ namespace EBallotApi.Services
         {
             _connection = connection;
         }
-        public async Task SubmitVoteAsync(VoteRequestDto vote)
+        public async Task SubmitVoteAsync(VoteRequestDto vote, int voterId)
         {
 
             var (cipherBytes, ivBytes) = VoteAesHelper.EncryptVote(vote.CandidateId.ToString());
@@ -27,7 +27,7 @@ namespace EBallotApi.Services
                         ElectionId = vote.ElectionId,
                         ElectionConstituencyId = vote.ElectionConstituencyId,
                         CandidateId = vote.CandidateId,
-                        VoterId = vote.VoterId,
+                        VoterId = voterId,
                         EncryptedVote = cipherBytes,
                         IV = ivBytes
                     },

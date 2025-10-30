@@ -1,7 +1,9 @@
 ﻿using EBallotApi.Dto;
 using EBallotApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EBallotApi.Controllers
 {
@@ -17,10 +19,21 @@ namespace EBallotApi.Controllers
 
 
 
+        [Authorize(Roles = "Voter")]
         [HttpPost("submit")]
         public async Task<IActionResult> Submit([FromBody] VoteRequestDto vote)
         {
-            await _service.SubmitVoteAsync(vote);
+            // Extract voterId from JWT claim
+            var voterIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(voterIdClaim))
+                return Unauthorized(new { message = "Invalid token or voter not found." });
+
+            int voterId = int.Parse(voterIdClaim);
+
+            // Pass voterId explicitly to the service
+            await _service.SubmitVoteAsync(vote, voterId);
+
             return Ok(new { message = "Vote submitted successfully." });
         }
 

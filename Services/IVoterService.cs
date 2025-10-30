@@ -18,7 +18,7 @@ namespace EBallotApi.Services
         Task<string> ApproveVoterAsync(int voterId, int officerId);
         Task<string> RejectVoterAsync(int voterId, int officerId, string reason);
 
-        Task<bool> HasVoterVotedAsync(int voterId, int electionId, int electionConstituencyId);
+        Task<bool> HasVoterVotedAsync(int voterId, int electionConstituencyId);
 
 
     }

@@ -111,20 +111,23 @@ namespace EBallotApi.Controllers
 
         //is voter voted
         [HttpGet("status")]
+        [Authorize(Roles = "Voter")]
         public async Task<IActionResult> GetVoteStatus([FromQuery] int electionId, [FromQuery] int electionConstituencyId)
         {
             // Get voter ID from JWT claim
-            var voterId = int.Parse(User.FindFirst("VoterId")?.Value ?? "0");
+            var voterId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            if (voterId == 0)
-                return Unauthorized("Invalid or missing voter token");
 
-            var hasVoted = await _voterService.HasVoterVotedAsync(voterId, electionId, electionConstituencyId);
+            bool hasVoted = await _voterService.HasVoterVotedAsync(voterId, electionConstituencyId);
 
             return Ok(new
             {
-                success = true,
-                data = new { hasVoted }
+                voterId,
+                electionConstituencyId,
+                hasVoted,
+                message = hasVoted
+                    ? "Voter has already casted the vote."
+                    : "Voter has not voted yet."
             });
         }
 
